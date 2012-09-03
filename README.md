@@ -41,6 +41,7 @@ Goals
 Requirements
 ------------
 go.Zamara was tested with Go version 1.0.2 on:
+* OS X 10.8.1
 * Ubuntu 11.10
 
 There are currently no external dependencies aside from the standard
