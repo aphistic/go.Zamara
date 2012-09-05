@@ -92,7 +92,7 @@ func main() {
 
 	switch flags.runType {
 	case "mpq":
-		mpqOutput(&flags)
+		break
 	}
 
 	fmt.Printf("Unknown 'type' specified: %v\n", flags.runType)

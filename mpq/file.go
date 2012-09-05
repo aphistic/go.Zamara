@@ -28,10 +28,7 @@
 
 package mpq
 
-import (
-	"compress/bzip2"
-	"io"
-)
+import ()
 
 type File struct {
 	Filename string
@@ -43,48 +40,23 @@ type File struct {
 	Platform       uint16
 
 	compressionType byte
-	block           *BlockEntry
-	hash            *HashEntry
-	mpq             *Mpq
+	block           *blockEntry
+	hash            *hashEntry
 }
 
-func newFile(filename string, hash *HashEntry, block *BlockEntry, mpq *Mpq) (file *File) {
+func newFile(filename string, hash *hashEntry, block *blockEntry) (file *File) {
 	file = new(File)
 
 	file.Filename = filename
-	file.FileSize = block.FileSize
-	file.Flags = block.Flags
-	file.Language = hash.Language
-	file.Platform = hash.Platform
+	file.FileSize = block.fileSize
+	file.Flags = block.flags
+	file.Language = hash.language
+	file.Platform = hash.platform
 
 	file.block = block
 	file.hash = hash
-	file.mpq = mpq
 
-	compressionTypeBuffer := make([]byte, 1)
-	mpq.inFile.Seek(file.fileOffset(), 0)
-	mpq.inFile.Read(compressionTypeBuffer)
-	file.compressionType = compressionTypeBuffer[0]
+	file.compressionType = 0x00
 
 	return
-}
-
-func (file *File) fileOffset() (offset int64) {
-	return int64(file.mpq.ArchiveOffset + file.block.FilePosition)
-}
-
-func (file *File) GetReader() (reader io.Reader) {
-	file.mpq.inFile.Seek(file.fileOffset()+1, 0)
-	switch file.compressionType {
-	case MPQ_BZIP2:
-		reader = bzip2.NewReader(file.mpq.inFile)
-		return
-	case MPQ_UNCOMPRESSED:
-		fallthrough
-	default:
-		reader = file.mpq.inFile
-		return
-	}
-
-	return nil
 }

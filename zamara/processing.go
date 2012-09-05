@@ -35,12 +35,16 @@ import (
 )
 
 func processFile(inputFile string, outputFile string) bool {
-	mpq, err := mpq.LoadMpq(inputFile)
+	reader, err := os.Open(inputFile)
+	if err != nil {
+		fmt.Printf("There was an error opening the input file: %v\n", err.Error())
+		os.Exit(1234)
+	}
+
+	_, err = mpq.NewMpq(reader)
 	if err != nil {
 		fmt.Printf("There was an error processing the MPQ file:\n%v\n", err.Error())
 		os.Exit(1234)
-	}
-	if mpq.HasUserData {
 	}
 	return false
 }
