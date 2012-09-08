@@ -40,6 +40,8 @@ type zamaraFlags struct {
 	output  string // Output file or directory
 	format  string // Output format for output
 	runType string // Output type
+
+	verbose bool // Verbose output
 }
 
 var flags zamaraFlags
@@ -47,8 +49,9 @@ var flags zamaraFlags
 func init() {
 	flag.StringVar(&flags.input, "in", "", "Input file.")
 	flag.StringVar(&flags.output, "out", "", "Output file or directory.")
-	flag.StringVar(&flags.format, "format", "stdout", "Output format. [stdout, json, xml]")
+	flag.StringVar(&flags.format, "format", "stdout", "Output format. [stdout, json, xml, extract]")
 	flag.StringVar(&flags.runType, "type", "sc2", "Output type, see below for options.")
+	flag.BoolVar(&flags.verbose, "v", false, "Verbose output.")
 }
 
 func usage() {
@@ -64,16 +67,21 @@ func validateUsage() {
 	_, err := os.Stat(flags.input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to find input file %v\n", flags.input)
-		os.Exit(1234)
+		usage()
 	}
 
+	flags.format = strings.ToLower(flags.format)
+	flags.runType = strings.ToLower(flags.runType)
+
 	// Make sure we recognize the output format
-	switch strings.ToLower(flags.format) {
+	switch flags.format {
 	case "stdout":
 		break
 	case "json":
 		break
 	case "xml":
+		break
+	case "extract":
 		break
 	default:
 		fmt.Fprintf(os.Stderr,
@@ -90,11 +98,18 @@ func main() {
 
 	//fmt.Printf("\nFlags: %+v\n\n", flags)
 
-	switch flags.runType {
-	case "mpq":
+	switch flags.format {
+	case "extract":
+		extractMpq(flags)
+		break
+	case "stdout":
+		handleStdout(flags)
+		break
+	default:
 		break
 	}
 
-	fmt.Printf("Unknown 'type' specified: %v\n", flags.runType)
-	os.Exit(1234)
+	fmt.Fprintf(os.Stderr,
+		"Unknown arguments lead to an unknown state, file a bug with your command line arguments to get this fixed!\n")
+	os.Exit(1)
 }

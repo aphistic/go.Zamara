@@ -40,18 +40,18 @@ type File struct {
 	Platform       uint16
 
 	compressionType byte
-	block           *blockEntry
-	hash            *hashEntry
+	block           *BlockEntry
+	hash            *HashEntry
 }
 
-func newFile(filename string, hash *hashEntry, block *blockEntry) (file *File) {
+func newFile(filename string, hash *HashEntry, block *BlockEntry) (file *File) {
 	file = new(File)
 
 	file.Filename = filename
-	file.FileSize = block.fileSize
-	file.Flags = block.flags
-	file.Language = hash.language
-	file.Platform = hash.platform
+	file.FileSize = block.FileSize
+	file.Flags = block.Flags
+	file.Language = hash.Language
+	file.Platform = hash.Platform
 
 	file.block = block
 	file.hash = hash

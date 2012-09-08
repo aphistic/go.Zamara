@@ -32,20 +32,20 @@ import (
 	"encoding/binary"
 )
 
-type blockEntry struct {
-	filePosition   uint32
-	compressedSize uint32
-	fileSize       uint32
-	flags          uint32
+type BlockEntry struct {
+	FilePosition   uint32
+	CompressedSize uint32
+	FileSize       uint32
+	Flags          uint32
 }
 
-func newBlockEntry(data []byte) (entry *blockEntry) {
-	entry = new(blockEntry)
+func newBlockEntry(data []byte) (entry *BlockEntry) {
+	entry = new(BlockEntry)
 
-	entry.filePosition = binary.LittleEndian.Uint32(data[:4])
-	entry.compressedSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
-	entry.fileSize = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
-	entry.flags = binary.LittleEndian.Uint32(data[0x0C : 0x0C+4])
+	entry.FilePosition = binary.LittleEndian.Uint32(data[:4])
+	entry.CompressedSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
+	entry.FileSize = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
+	entry.Flags = binary.LittleEndian.Uint32(data[0x0C : 0x0C+4])
 
 	return
 }

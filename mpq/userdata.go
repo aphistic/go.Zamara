@@ -38,17 +38,17 @@ type userDataHeader struct {
 	userDataSize    uint32
 }
 
-type userData struct {
-	header *userDataHeader
+type UserData struct {
+	Header *userDataHeader
 }
 
-func readUserData(data []byte) (readData *userData) {
-	readData = new(userData)
+func readUserData(data []byte) (readData *UserData) {
+	readData = new(UserData)
 
-	readData.header = new(userDataHeader)
-	readData.header.maxUserDataSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
-	readData.header.archiveOffset = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
-	readData.header.userDataSize = binary.LittleEndian.Uint32(data[0x0c : 0x0c+4])
+	readData.Header = new(userDataHeader)
+	readData.Header.maxUserDataSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
+	readData.Header.archiveOffset = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
+	readData.Header.userDataSize = binary.LittleEndian.Uint32(data[0x0c : 0x0c+4])
 
 	return
 }

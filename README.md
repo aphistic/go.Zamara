@@ -45,8 +45,9 @@ go.Zamara was tested with Go version 1.0.2 on:
 * Ubuntu 11.10
 * Windows 7
 
-There are currently no external dependencies aside from the standard
-Go library and the Zamara mpq, sc2 and zamara packages.
+go.Zamara requires the following libraries aside form the standard Go
+library and the go.Zamara mpq, sc2 and zamara packages:
+* launchpad.net/gocheck (For testing)
 
 Building/Testing
 ----------------
@@ -64,7 +65,7 @@ go.Zamara uses the standard "go" command:
 
 Contact
 -------
-Website: https://github.com/aphistic/go.zamara
+Website: https://github.com/aphistic/go.Zamara
 
 Credits
 -------

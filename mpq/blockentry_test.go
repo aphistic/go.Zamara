@@ -43,20 +43,20 @@ func TestLoadBlockEntry(t *testing.T) {
 
 	entry := newBlockEntry(decryptedTable)
 
-	if entry.filePosition != 0x2C {
+	if entry.FilePosition != 0x2C {
 		t.Errorf("FilePosition - Expected: %#v Actual: %#v",
-			uint32(0x2C), entry.filePosition)
+			uint32(0x2C), entry.FilePosition)
 	}
-	if entry.compressedSize != 593 {
+	if entry.CompressedSize != 593 {
 		t.Errorf("CompressedSize - Expected: %v Actual: %v",
-			593, entry.compressedSize)
+			593, entry.CompressedSize)
 	}
-	if entry.fileSize != 593 {
+	if entry.FileSize != 593 {
 		t.Errorf("FileSize - Expected: %v Actual: %v",
-			593, entry.fileSize)
+			593, entry.FileSize)
 	}
-	if entry.flags != 0x81000200 {
+	if entry.Flags != 0x81000200 {
 		t.Errorf("Flags - Expected: %v Actual: %v",
-			uint32(0x81000200), entry.flags)
+			uint32(0x81000200), entry.Flags)
 	}
 }

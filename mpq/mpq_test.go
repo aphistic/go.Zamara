@@ -65,7 +65,7 @@ func TestUserDataHeaderFlag(t *testing.T) {
 	if !mpq.hasUserData {
 		t.Error("User data flag was not set")
 	}
-	if mpq.userData == nil {
+	if mpq.UserData == nil {
 		t.Error("User data was not loaded")
 	}
 }
@@ -82,17 +82,17 @@ func TestUserDataHeader(t *testing.T) {
 		t.Errorf("Error loading MPQ: %v", err.Error())
 		return
 	}
-	if mpq.userData.header.maxUserDataSize != 512 {
+	if mpq.UserData.Header.maxUserDataSize != 512 {
 		t.Errorf("MaxUserDataSize = %v (Expected: 512)",
-			mpq.userData.header.maxUserDataSize)
+			mpq.UserData.Header.maxUserDataSize)
 	}
-	if mpq.userData.header.archiveOffset != 1024 {
+	if mpq.UserData.Header.ArchiveOffset != 1024 {
 		t.Errorf("ArchiveOffset = %v (Expected: 1024)",
-			mpq.userData.header.archiveOffset)
+			mpq.UserData.Header.ArchiveOffset)
 	}
-	if mpq.userData.header.userDataSize != 60 {
+	if mpq.UserData.Header.userDataSize != 60 {
 		t.Errorf("UserDataSize = %v (Expected: 60)",
-			mpq.userData.header.userDataSize)
+			mpq.UserData.Header.userDataSize)
 	}
 }
 
@@ -108,49 +108,49 @@ func TestReadMpqHeader(t *testing.T) {
 		t.Errorf("Error loading MPQ: %v", err.Error())
 		return
 	}
-	if mpq.header.headerSize != 44 {
+	if mpq.Header.headerSize != 44 {
 		t.Errorf("HeaderSize = %v (Expected: 44)",
-			mpq.header.headerSize)
+			mpq.Header.headerSize)
 	}
-	if mpq.header.archiveSize != 109012 {
+	if mpq.Header.archiveSize != 109012 {
 		t.Errorf("ArchiveSize = %v (Expected: 109012)",
-			mpq.header.archiveSize)
+			mpq.Header.archiveSize)
 	}
-	if mpq.header.formatVersion != 0x01 {
+	if mpq.Header.formatVersion != 0x01 {
 		t.Errorf("FormatVersion = %#v (Expected: 0x01)",
-			mpq.header.formatVersion)
+			mpq.Header.formatVersion)
 	}
-	if mpq.header.blockSize != 0x03 {
+	if mpq.Header.blockSize != 0x03 {
 		t.Errorf("BlockSize = %#v (Expected: 0x03)",
-			mpq.header.blockSize)
+			mpq.Header.blockSize)
 	}
-	if mpq.header.hashTableOffset != 108596 {
+	if mpq.Header.hashTableOffset != 108596 {
 		t.Errorf("HashTableOffset = %v (Expected: 108596)",
-			mpq.header.hashTableOffset)
+			mpq.Header.hashTableOffset)
 	}
-	if mpq.header.blockTableOffset != 108852 {
+	if mpq.Header.blockTableOffset != 108852 {
 		t.Errorf("BlockTableOffset = %v (Expected: 108852)",
-			mpq.header.blockTableOffset)
+			mpq.Header.blockTableOffset)
 	}
-	if mpq.header.hashTableEntries != 16 {
+	if mpq.Header.hashTableEntries != 16 {
 		t.Errorf("HashTableEntries = %v (Expected: 16)",
-			mpq.header.hashTableEntries)
+			mpq.Header.hashTableEntries)
 	}
-	if mpq.header.blockTableEntries != 10 {
+	if mpq.Header.blockTableEntries != 10 {
 		t.Errorf("BlockTableEntries = %v (Expected: 10)",
-			mpq.header.blockTableEntries)
+			mpq.Header.blockTableEntries)
 	}
-	if mpq.header.extendedBlockTableOffset != 0 {
+	if mpq.Header.extendedBlockTableOffset != 0 {
 		t.Errorf("ExtendedBlockTableOffset = %v (Expected: 0)",
-			mpq.header.extendedBlockTableOffset)
+			mpq.Header.extendedBlockTableOffset)
 	}
-	if mpq.header.hashTableOffsetHigh != 0 {
+	if mpq.Header.hashTableOffsetHigh != 0 {
 		t.Errorf("HashTableOffsetHigh = %v (Expected: 0)",
-			mpq.header.hashTableOffsetHigh)
+			mpq.Header.hashTableOffsetHigh)
 	}
-	if mpq.header.blockTableOffsetHigh != 0 {
+	if mpq.Header.blockTableOffsetHigh != 0 {
 		t.Errorf("BlockTableOffsetHigh = %v (Expected: 0)",
-			mpq.header.blockTableOffsetHigh)
+			mpq.Header.blockTableOffsetHigh)
 	}
 }
 
@@ -251,5 +251,50 @@ func TestReadBeyondFile(t *testing.T) {
 	}
 	if err == nil || err != EOF {
 		t.Errorf("Did not get expected EOF error for read beyond file.")
+	}
+}
+
+func TestSelectFileFromClosedReader(t *testing.T) {
+	reader, err := os.Open("testdata/replay1.SC2Replay")
+	if err != nil {
+		t.Errorf("Could not read test data: %v", err.Error())
+		return
+	}
+
+	mpq, err := NewMpq(reader)
+	if err != nil {
+		t.Errorf("Could not load test MPQ: %v", err.Error())
+		return
+	}
+
+	reader.Close()
+
+	_, err = mpq.File("(listfile)")
+	if err == nil {
+		t.Error("Attempt to select file from closed reader succeeded.")
+	}
+}
+
+func TestReadFromClosedReader(t *testing.T) {
+	reader, err := os.Open("testdata/replay1.SC2Replay")
+	if err != nil {
+		t.Errorf("Could not load test data: %v", err.Error())
+		return
+	}
+
+	mpq, err := NewMpq(reader)
+	if err != nil {
+		t.Errorf("There was an error creating the mpq: %v", err.Error())
+		return
+	}
+
+	mpq.File("(listfile)")
+
+	reader.Close()
+
+	buffer := make([]byte, 8)
+	_, err = mpq.Read(buffer)
+	if err == nil {
+		t.Error("Attempt to read from a closed io.Reader succeeded.")
 	}
 }

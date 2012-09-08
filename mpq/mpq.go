@@ -41,22 +41,22 @@ import (
 var EOF = errors.New("EOF")
 
 const (
-	COMPRESS_NONE  byte = 0x00
-	COMPRESS_BZIP2 byte = 0x10
+	CompressNone  byte = 0x00
+	CompressBzip2 byte = 0x10
 )
 
 type Mpq struct {
 	reader io.ReadSeeker
 
-	archiveOffset uint32
-	header        header
+	ArchiveOffset uint32
+	Header        Header
 
 	hasUserData bool
-	userData    *userData
+	UserData    *UserData
 
 	files        map[string]*File
-	hashEntries  []*hashEntry
-	blockEntries []*blockEntry
+	HashEntries  []*HashEntry
+	BlockEntries []*BlockEntry
 
 	file          *File
 	fileReader    io.Reader
@@ -95,7 +95,6 @@ func (mpq *Mpq) readHeaders(reader io.ReadSeeker) (err error) {
 
 	err = mpq.readFiles()
 	if err != nil {
-		fmt.Printf("qwefasdf")
 		return err
 	}
 
@@ -113,25 +112,45 @@ func (mpq *Mpq) File(filename string) (file *File, err error) {
 				filename)
 			return
 		}
-		fileBlock := mpq.blockEntries[fileHash.blockIndex]
+		fileBlock := mpq.BlockEntries[fileHash.BlockIndex]
 
 		file = newFile(filename, fileHash, fileBlock)
 		mpq.files[filename] = file
 	}
 
-	mpq.reader.Seek(int64(mpq.archiveOffset+
-		file.block.filePosition), 0)
+	_, err = mpq.reader.Seek(int64(mpq.ArchiveOffset+
+		file.block.FilePosition), 0)
+	if err != nil {
+		return
+	}
 	compType := make([]byte, 1)
-	mpq.reader.Read(compType)
-	file.compressionType = compType[0]
+	_, err = mpq.reader.Read(compType)
+	if err != nil {
+		return
+	}
 
+	file.compressionType = compType[0]
 	switch file.compressionType {
-	case COMPRESS_BZIP2:
+	case CompressBzip2:
 		mpq.fileReader = bzip2.NewReader(mpq.reader)
 		break
-	case COMPRESS_NONE:
-		fallthrough
+	case CompressNone:
+		// Explicitly found that this doesn't have
+		// compression, so don't go back to the
+		// original file position as in the default.
+		mpq.fileReader = mpq.reader
+		break
 	default:
+		// Don't know this compression type, so just
+		// reset back one byte and read from there as
+		// if this file doesn't have a header byte.  This
+		// can happen if the file flags say the file is
+		// compressed but the header byte doesn't exist.
+		_, err = mpq.reader.Seek(int64(mpq.ArchiveOffset+
+			file.block.FilePosition), 0)
+		if err != nil {
+			return
+		}
 		mpq.fileReader = mpq.reader
 		break
 	}
@@ -173,13 +192,13 @@ func (mpq *Mpq) Read(p []byte) (n int, err error) {
 	return
 }
 
-func (mpq *Mpq) getHashEntry(filename string) (entry *hashEntry, err error) {
+func (mpq *Mpq) getHashEntry(filename string) (entry *HashEntry, err error) {
 	hashA := hashString(filename, 0x100)
 	hashB := hashString(filename, 0x200)
 
-	for _, entry := range mpq.hashEntries {
-		if entry.filePathHashA == hashA &&
-			entry.filePathHashB == hashB {
+	for _, entry := range mpq.HashEntries {
+		if entry.FilePathHashA == hashA &&
+			entry.FilePathHashB == hashB {
 			return entry, nil
 		}
 	}
@@ -214,57 +233,57 @@ func (mpq *Mpq) readHeader() (err error) {
 		user_buf := make([]byte, userArchiveSize)
 
 		mpq.reader.Read(user_buf)
-		mpq.userData = readUserData(user_buf)
+		mpq.UserData = readUserData(user_buf)
 		mpq.hasUserData = true
 		mpq.reader.Seek(4, 1)
 	}
 
 	_, _ = mpq.reader.Read(buf[:4])
-	mpq.header.headerSize = binary.LittleEndian.Uint32(buf[:4])
+	mpq.Header.headerSize = binary.LittleEndian.Uint32(buf[:4])
 
-	buf = make([]byte, mpq.header.headerSize-4)
+	buf = make([]byte, mpq.Header.headerSize-4)
 	mpq.reader.Read(buf)
 
-	mpq.header.archiveSize = binary.LittleEndian.Uint32(buf[:4])
-	mpq.header.formatVersion = binary.LittleEndian.Uint16(buf[0x04 : 0x04+2])
-	mpq.header.blockSize = binary.LittleEndian.Uint16(buf[0x06 : 0x06+2])
-	mpq.header.hashTableOffset = binary.LittleEndian.Uint32(buf[0x08 : 0x08+4])
-	mpq.header.blockTableOffset = binary.LittleEndian.Uint32(buf[0x0c : 0x0c+4])
-	mpq.header.hashTableEntries = binary.LittleEndian.Uint32(buf[0x10 : 0x10+4])
-	mpq.header.blockTableEntries = binary.LittleEndian.Uint32(buf[0x14 : 0x14+4])
-	mpq.header.extendedBlockTableOffset = binary.LittleEndian.Uint64(buf[0x18 : 0x18+8])
-	mpq.header.hashTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x20 : 0x20+2])
-	mpq.header.blockTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x22 : 0x22+2])
+	mpq.Header.archiveSize = binary.LittleEndian.Uint32(buf[:4])
+	mpq.Header.formatVersion = binary.LittleEndian.Uint16(buf[0x04 : 0x04+2])
+	mpq.Header.blockSize = binary.LittleEndian.Uint16(buf[0x06 : 0x06+2])
+	mpq.Header.hashTableOffset = binary.LittleEndian.Uint32(buf[0x08 : 0x08+4])
+	mpq.Header.blockTableOffset = binary.LittleEndian.Uint32(buf[0x0c : 0x0c+4])
+	mpq.Header.hashTableEntries = binary.LittleEndian.Uint32(buf[0x10 : 0x10+4])
+	mpq.Header.blockTableEntries = binary.LittleEndian.Uint32(buf[0x14 : 0x14+4])
+	mpq.Header.extendedBlockTableOffset = binary.LittleEndian.Uint64(buf[0x18 : 0x18+8])
+	mpq.Header.hashTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x20 : 0x20+2])
+	mpq.Header.blockTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x22 : 0x22+2])
 
-	mpq.archiveOffset = 0x00
+	mpq.ArchiveOffset = 0x00
 	if mpq.hasUserData {
-		mpq.archiveOffset = mpq.userData.header.archiveOffset
+		mpq.ArchiveOffset = mpq.UserData.Header.archiveOffset
 	}
 
 	return nil
 }
 
 func (mpq *Mpq) readHashTable() (err error) {
-	hashEntries := mpq.header.hashTableEntries
+	HashEntries := mpq.Header.hashTableEntries
 
-	mpq.hashEntries = make([]*hashEntry, hashEntries)
+	mpq.HashEntries = make([]*HashEntry, HashEntries)
 
 	mpq.reader.Seek(
-		int64(mpq.archiveOffset+mpq.header.hashTableOffset), 0)
+		int64(mpq.ArchiveOffset+mpq.Header.hashTableOffset), 0)
 
 	// Each entry is the size of 4x uint32, giving 16 bytes.
 	// Create a buffer and read the entire hash table from
 	// the file, then decrypt it.
-	buffer := make([]byte, hashEntries*16)
+	buffer := make([]byte, HashEntries*16)
 	mpq.reader.Read(buffer)
 
 	encryptor := newBlockEncryptor("(hash table)", 0x300)
 	encryptor.decrypt(&buffer)
 
 	offset := 0
-	for idx := uint32(0); idx < hashEntries; idx++ {
+	for idx := uint32(0); idx < HashEntries; idx++ {
 		entry := newHashEntry(buffer[offset : offset+16])
-		mpq.hashEntries[idx] = entry
+		mpq.HashEntries[idx] = entry
 		offset += 16
 	}
 
@@ -272,25 +291,25 @@ func (mpq *Mpq) readHashTable() (err error) {
 }
 
 func (mpq *Mpq) readBlockTable() (err error) {
-	blockEntries := mpq.header.blockTableEntries
+	BlockEntries := mpq.Header.blockTableEntries
 
-	mpq.blockEntries = make([]*blockEntry, blockEntries)
+	mpq.BlockEntries = make([]*BlockEntry, BlockEntries)
 
-	mpq.reader.Seek(int64(mpq.archiveOffset+mpq.header.blockTableOffset), 0)
+	mpq.reader.Seek(int64(mpq.ArchiveOffset+mpq.Header.blockTableOffset), 0)
 
 	// Each entry is the size of 4x uint32, giving 16 bytes.
 	// Create a buffer and read the entire hash table from
 	// the file, then decrypt it.
-	buffer := make([]byte, blockEntries*16)
+	buffer := make([]byte, BlockEntries*16)
 	mpq.reader.Read(buffer)
 
 	encryptor := newBlockEncryptor("(block table)", 0x300)
 	encryptor.decrypt(&buffer)
 
 	offset := 0
-	for idx := uint32(0); idx < blockEntries; idx++ {
+	for idx := uint32(0); idx < BlockEntries; idx++ {
 		entry := newBlockEntry(buffer[offset : offset+16])
-		mpq.blockEntries[idx] = entry
+		mpq.BlockEntries[idx] = entry
 		offset += 16
 	}
 
@@ -298,6 +317,13 @@ func (mpq *Mpq) readBlockTable() (err error) {
 }
 
 func (mpq *Mpq) readFiles() (err error) {
+	// Attempt to read the special files just
+	// to get them in the file list, since they
+	// won't be in the list file
+	mpq.File("(attributes)")
+	mpq.File("(signature)")
+	mpq.File("(user data)")
+
 	listfile, err := mpq.File("(listfile)")
 	if err != nil {
 		return

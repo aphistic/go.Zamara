@@ -28,7 +28,7 @@
 
 package mpq
 
-type header struct {
+type Header struct {
 	headerSize    uint32
 	archiveSize   uint32
 	formatVersion uint16
