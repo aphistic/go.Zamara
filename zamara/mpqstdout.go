@@ -20,5 +20,22 @@ func mpqStdout(flags zamaraFlags) {
 			"Unable to read MPQ: %v", err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("%v", mpq.ArchiveOffset)
+
+	fmt.Printf("Reading MPQ: %v\n", flags.input)
+	mpqStdoutHeader(flags, mpq)
+}
+
+func mpqStdoutHeader(flags zamaraFlags, mpq *mpq.Mpq) {
+	fmt.Printf("Archive Offset: %v\n\n", mpq.ArchiveOffset)
+	fmt.Printf("\n")
+
+	fmt.Printf("Header\n")
+	fmt.Printf("======\n")
+	fmt.Printf("Header Size: %v\n", mpq.Header.HeaderSize)
+	fmt.Printf("Archive Size: %v\n", mpq.Header.ArchiveSize)
+	fmt.Printf("Format Version: %v\n", mpq.Header.FormatVersion)
+	fmt.Printf("Block Size: %v\n", mpq.Header.BlockSize)
+	fmt.Printf("Hash Table Offset: %v\n", mpq.Header.HashTableOffset)
+	fmt.Printf("Block Table Offset: %v\n", mpq.Header.BlockTableOffset)
+	fmt.Printf("Hash Table Entries: %v\n", mpq.Header.HashTableEntries)
 }

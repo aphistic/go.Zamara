@@ -32,23 +32,23 @@ import (
 	"encoding/binary"
 )
 
-type userDataHeader struct {
-	maxUserDataSize uint32
-	archiveOffset   uint32
-	userDataSize    uint32
+type UserDataHeader struct {
+	MaxUserDataSize uint32
+	ArchiveOffset   uint32
+	UserDataSize    uint32
 }
 
 type UserData struct {
-	Header *userDataHeader
+	Header *UserDataHeader
 }
 
 func readUserData(data []byte) (readData *UserData) {
 	readData = new(UserData)
 
-	readData.Header = new(userDataHeader)
-	readData.Header.maxUserDataSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
-	readData.Header.archiveOffset = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
-	readData.Header.userDataSize = binary.LittleEndian.Uint32(data[0x0c : 0x0c+4])
+	readData.Header = new(UserDataHeader)
+	readData.Header.MaxUserDataSize = binary.LittleEndian.Uint32(data[0x04 : 0x04+4])
+	readData.Header.ArchiveOffset = binary.LittleEndian.Uint32(data[0x08 : 0x08+4])
+	readData.Header.UserDataSize = binary.LittleEndian.Uint32(data[0x0c : 0x0c+4])
 
 	return
 }

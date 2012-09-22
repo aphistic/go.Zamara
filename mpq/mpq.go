@@ -51,7 +51,7 @@ type Mpq struct {
 	ArchiveOffset uint32
 	Header        Header
 
-	hasUserData bool
+	HasUserData bool
 	UserData    *UserData
 
 	files        map[string]*File
@@ -234,42 +234,42 @@ func (mpq *Mpq) readHeader() (err error) {
 
 		mpq.reader.Read(user_buf)
 		mpq.UserData = readUserData(user_buf)
-		mpq.hasUserData = true
+		mpq.HasUserData = true
 		mpq.reader.Seek(4, 1)
 	}
 
 	_, _ = mpq.reader.Read(buf[:4])
-	mpq.Header.headerSize = binary.LittleEndian.Uint32(buf[:4])
+	mpq.Header.HeaderSize = binary.LittleEndian.Uint32(buf[:4])
 
-	buf = make([]byte, mpq.Header.headerSize-4)
+	buf = make([]byte, mpq.Header.HeaderSize-4)
 	mpq.reader.Read(buf)
 
-	mpq.Header.archiveSize = binary.LittleEndian.Uint32(buf[:4])
-	mpq.Header.formatVersion = binary.LittleEndian.Uint16(buf[0x04 : 0x04+2])
-	mpq.Header.blockSize = binary.LittleEndian.Uint16(buf[0x06 : 0x06+2])
-	mpq.Header.hashTableOffset = binary.LittleEndian.Uint32(buf[0x08 : 0x08+4])
-	mpq.Header.blockTableOffset = binary.LittleEndian.Uint32(buf[0x0c : 0x0c+4])
-	mpq.Header.hashTableEntries = binary.LittleEndian.Uint32(buf[0x10 : 0x10+4])
-	mpq.Header.blockTableEntries = binary.LittleEndian.Uint32(buf[0x14 : 0x14+4])
-	mpq.Header.extendedBlockTableOffset = binary.LittleEndian.Uint64(buf[0x18 : 0x18+8])
-	mpq.Header.hashTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x20 : 0x20+2])
-	mpq.Header.blockTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x22 : 0x22+2])
+	mpq.Header.ArchiveSize = binary.LittleEndian.Uint32(buf[:4])
+	mpq.Header.FormatVersion = binary.LittleEndian.Uint16(buf[0x04 : 0x04+2])
+	mpq.Header.BlockSize = binary.LittleEndian.Uint16(buf[0x06 : 0x06+2])
+	mpq.Header.HashTableOffset = binary.LittleEndian.Uint32(buf[0x08 : 0x08+4])
+	mpq.Header.BlockTableOffset = binary.LittleEndian.Uint32(buf[0x0c : 0x0c+4])
+	mpq.Header.HashTableEntries = binary.LittleEndian.Uint32(buf[0x10 : 0x10+4])
+	mpq.Header.BlockTableEntries = binary.LittleEndian.Uint32(buf[0x14 : 0x14+4])
+	mpq.Header.ExtendedBlockTableOffset = binary.LittleEndian.Uint64(buf[0x18 : 0x18+8])
+	mpq.Header.HashTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x20 : 0x20+2])
+	mpq.Header.BlockTableOffsetHigh = binary.LittleEndian.Uint16(buf[0x22 : 0x22+2])
 
 	mpq.ArchiveOffset = 0x00
-	if mpq.hasUserData {
-		mpq.ArchiveOffset = mpq.UserData.Header.archiveOffset
+	if mpq.HasUserData {
+		mpq.ArchiveOffset = mpq.UserData.Header.ArchiveOffset
 	}
 
 	return nil
 }
 
 func (mpq *Mpq) readHashTable() (err error) {
-	HashEntries := mpq.Header.hashTableEntries
+	HashEntries := mpq.Header.HashTableEntries
 
 	mpq.HashEntries = make([]*HashEntry, HashEntries)
 
 	mpq.reader.Seek(
-		int64(mpq.ArchiveOffset+mpq.Header.hashTableOffset), 0)
+		int64(mpq.ArchiveOffset+mpq.Header.HashTableOffset), 0)
 
 	// Each entry is the size of 4x uint32, giving 16 bytes.
 	// Create a buffer and read the entire hash table from
@@ -291,11 +291,11 @@ func (mpq *Mpq) readHashTable() (err error) {
 }
 
 func (mpq *Mpq) readBlockTable() (err error) {
-	BlockEntries := mpq.Header.blockTableEntries
+	BlockEntries := mpq.Header.BlockTableEntries
 
 	mpq.BlockEntries = make([]*BlockEntry, BlockEntries)
 
-	mpq.reader.Seek(int64(mpq.ArchiveOffset+mpq.Header.blockTableOffset), 0)
+	mpq.reader.Seek(int64(mpq.ArchiveOffset+mpq.Header.BlockTableOffset), 0)
 
 	// Each entry is the size of 4x uint32, giving 16 bytes.
 	// Create a buffer and read the entire hash table from

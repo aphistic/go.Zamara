@@ -29,18 +29,18 @@
 package mpq
 
 type Header struct {
-	headerSize    uint32
-	archiveSize   uint32
-	formatVersion uint16
+	HeaderSize    uint32
+	ArchiveSize   uint32
+	FormatVersion uint16
 
-	blockSize uint16
+	BlockSize uint16
 
-	hashTableOffset   uint32
-	blockTableOffset  uint32
-	hashTableEntries  uint32
-	blockTableEntries uint32
+	HashTableOffset   uint32
+	BlockTableOffset  uint32
+	HashTableEntries  uint32
+	BlockTableEntries uint32
 
-	extendedBlockTableOffset uint64
-	hashTableOffsetHigh      uint16
-	blockTableOffsetHigh     uint16
+	ExtendedBlockTableOffset uint64
+	HashTableOffsetHigh      uint16
+	BlockTableOffsetHigh     uint16
 }

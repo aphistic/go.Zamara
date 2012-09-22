@@ -29,10 +29,14 @@
 package mpq
 
 import (
-	"testing"
+	. "launchpad.net/gocheck"
 )
 
-func TestLoadBlockEntry(t *testing.T) {
+type BlockEntrySuite struct {}
+
+var _ = Suite(&BlockEntrySuite{})
+
+func (s *BlockEntrySuite) TestLoadBlockEntry(c *C) {
 	// Table after it's been decrypted
 	decryptedTable := []byte{
 		0x2C, 0x00, 0x00, 0x00,
@@ -43,20 +47,8 @@ func TestLoadBlockEntry(t *testing.T) {
 
 	entry := newBlockEntry(decryptedTable)
 
-	if entry.FilePosition != 0x2C {
-		t.Errorf("FilePosition - Expected: %#v Actual: %#v",
-			uint32(0x2C), entry.FilePosition)
-	}
-	if entry.CompressedSize != 593 {
-		t.Errorf("CompressedSize - Expected: %v Actual: %v",
-			593, entry.CompressedSize)
-	}
-	if entry.FileSize != 593 {
-		t.Errorf("FileSize - Expected: %v Actual: %v",
-			593, entry.FileSize)
-	}
-	if entry.Flags != 0x81000200 {
-		t.Errorf("Flags - Expected: %v Actual: %v",
-			uint32(0x81000200), entry.Flags)
-	}
+	c.Check(entry.FilePosition, Equals, uint32(0x2C))
+	c.Check(entry.CompressedSize, Equals, uint32(593))
+	c.Check(entry.FileSize, Equals, uint32(593))
+	c.Check(entry.Flags, Equals, uint32(0x81000200))
 }

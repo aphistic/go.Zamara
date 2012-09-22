@@ -29,10 +29,13 @@
 package mpq
 
 import (
-	"testing"
+	. "launchpad.net/gocheck"
 )
 
-func TestLoadHashEntry(t *testing.T) {
+type HashEntrySuite struct {}
+var _ = Suite(&HashEntrySuite{})
+
+func (s *HashEntrySuite) TestLoadHashEntry(c *C) {
 	// Hash table after it's been decrypted
 	decryptedTable := []byte{
 		0xCB, 0x37, 0x84, 0xD3,
@@ -43,24 +46,9 @@ func TestLoadHashEntry(t *testing.T) {
 
 	entry := newHashEntry(decryptedTable)
 
-	if entry.FilePathHashA != 0xD38437CB {
-		t.Errorf("FilePathHashA - Expected: %#v Actual: %#v",
-			uint32(0xD38437CB), entry.FilePathHashA)
-	}
-	if entry.FilePathHashB != 0x07DFEAEC {
-		t.Errorf("FilePathHashB - Expected: %#v Actual: %#v",
-			uint32(0x07DFEAEC), entry.FilePathHashB)
-	}
-	if entry.Language != 0x0000 {
-		t.Errorf("Language - Expected: %#v Actual: %#v",
-			0x0000, entry.Language)
-	}
-	if entry.Platform != 0x0000 {
-		t.Errorf("Platform - Expected: %#v Actual: %#v",
-			0x0000, entry.Platform)
-	}
-	if entry.BlockIndex != 0x00000009 {
-		t.Errorf("BlockIndex - Expected: %#v Actual: %#v",
-			uint32(0x00000009), entry.BlockIndex)
-	}
+	c.Check(entry.FilePathHashA, Equals, uint32(0xD38437CB))
+	c.Check(entry.FilePathHashB, Equals, uint32(0x07DFEAEC))
+	c.Check(entry.Language, Equals, uint16(0x0000))
+	c.Check(entry.Platform, Equals, uint16(0x0000))
+	c.Check(entry.BlockIndex, Equals, uint32(0x00000009))
 }

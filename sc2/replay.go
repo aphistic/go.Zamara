@@ -1,52 +1,55 @@
 package sc2
 
 import (
+	"fmt"
 	"github.com/aphistic/go.Zamara/mpq"
 	"io"
+	"time"
 )
 
 const (
-	GAME_UNKNOWN int = iota
-	GAME_1V1
-	GAME_2V2
-	GAME_3V3
-	GAME_4V4
-	GAME_FFA
-	GAME_6V6
-	GAME_CUSTOM
+	GameUnknown int = iota
+	Game1v1
+	Game2v2
+	Game3v3
+	Game4v4
+	GameFfa
+	Game6v6
+	GameCustom
 )
 
 const (
-	SPEED_UNKNOWN = iota
-	SPEED_SLOWER
-	SPEED_SLOW
-	SPEED_NORMAL
-	SPEED_FAST
-	SPEED_FASTER
+	SpeedUnknown = iota
+	SpeedSlower
+	SpeedSlow
+	SpeedNormal
+	SpeedFast
+	SpeedFaster
 )
 
 const (
-	CATEGORY_UNKNOWN = iota
-	CATEGORY_PRIVATE
-	CATEGORY_LADDER
-	CATEGORY_PUBLIC
+	CategoryUnknown = iota
+	CategoryPrivate
+	CategoryLadder
+	CategoryPublic
 )
 
 type Replay struct {
-	mpq     *mpq.Mpq
-	players []*Player
+	mpq *mpq.Mpq
 
 	MapName string
 
-	Timestamp      uint64
-	TimezoneOffset int64
+	Timestamp time.Time
 
 	GameType     int
 	GameSpeed    int
 	GameCategory int
+
+	Players []*Player
 }
 
 func NewReplay(reader io.ReadSeeker) (replay *Replay, err error) {
+	fmt.Printf("")
 	replay = new(Replay)
 	err = replay.load(reader)
 	if err != nil {
@@ -57,7 +60,7 @@ func NewReplay(reader io.ReadSeeker) (replay *Replay, err error) {
 }
 
 func (replay *Replay) load(reader io.ReadSeeker) (err error) {
-	replay.players = make([]*Player, 0)
+	replay.Players = make([]*Player, 0)
 
 	replay.mpq, err = mpq.NewMpq(reader)
 	if err != nil {
@@ -93,11 +96,178 @@ func (replay *Replay) loadDetails() (err error) {
 		return
 	}
 
+	totalPlayers := value.i(0).size()
+	replay.Players = make([]*Player, totalPlayers)
+	for idx := int64(0); idx < totalPlayers; idx++ {
+		player, _ := newPlayer(value.i(0).i(idx))
+		replay.Players[idx] = player
+	}
+
 	replay.MapName = value.i(1).asString()
+
+	tzo := value.i(6).asInt64()
+	tzo = tzo / 10000000
+	loc := time.FixedZone("unknown", int(tzo))
+
+	ts := value.i(5).asInt64()
+	ts = (ts - 116444735995904000) / 10000000
+	utc := time.Unix(ts, 0).UTC()
+	t := time.Date(utc.Year(), utc.Month(), utc.Day(),
+		utc.Hour(), utc.Minute(), utc.Second(),
+		utc.Nanosecond(), loc)
+	replay.Timestamp = t
 
 	return
 }
 
 func (replay *Replay) loadAttributes() (err error) {
+	file, err := replay.mpq.File("replay.attributes.events")
+	if err != nil {
+		return
+	}
+
+	buffer := make([]byte, file.FileSize)
+	_, err = replay.mpq.Read(buffer)
+	if err != nil && err != mpq.EOF {
+		return
+	}
+
+	attrs, err := newAttributeFile(buffer)
+	if err != nil {
+		return
+	}
+
+	for idx := 0; idx < len(attrs.attributes); idx++ {
+		attr := attrs.attributes[idx]
+		if attr.isPlayer() {
+			replay.processPlayerAttribute(attr)
+		} else {
+			replay.processGlobalAttribute(attr)
+		}
+	}
+
+	return
+}
+
+func (replay *Replay) processPlayerAttribute(attr *replayAttribute) (err error) {
+	playerIdx := attr.playerId - 1
+
+	typeMap := map[string]int{
+		"Humn": PlayerHuman,
+		"Comp": PlayerComputer,
+	}
+	raceMap := map[string]int{
+		"RAND": RaceRandom,
+		"Terr": RaceTerran,
+		"Prot": RaceProtoss,
+		"Zerg": RaceZerg,
+	}
+	difficultyMap := map[string]int{
+		"VyEy": DifficultyVeryEasy,
+		"Easy": DifficultyEasy,
+		"Medi": DifficultyMedium,
+		"Hard": DifficultyHard,
+		"VyHd": DifficultyVeryHard,
+		"Insa": DifficultyInsane,
+	}
+	colorMap := map[string]int{
+		"tc01": ColorRed,
+		"tc02": ColorBlue,
+		"tc03": ColorTeal,
+		"tc04": ColorPurple,
+		"tc05": ColorYellow,
+		"tc06": ColorOrange,
+		"tc07": ColorGreen,
+		"tc08": ColorLightPink,
+		"tc09": ColorViolet,
+		"tc10": ColorLightGrey,
+		"tc11": ColorDarkGreen,
+		"tc12": ColorBrown,
+		"tc13": ColorLightGreen,
+		"tc14": ColorDarkGrey,
+		"tc15": ColorPink,
+	}
+
+	switch attr.id {
+	case AttrPType:
+		val, exists := typeMap[attr.strValue]
+		if !exists {
+			val = PlayerUnknown
+		}
+		replay.Players[playerIdx].Type = val
+		break
+	case AttrPChosenRace:
+		val, exists := raceMap[attr.strValue]
+		if !exists {
+			val = RaceUnknown
+		}
+		replay.Players[playerIdx].ChosenRace = val
+		break
+	case AttrPDifficulty:
+		val, exists := difficultyMap[attr.strValue]
+		if !exists {
+			val = DifficultyUnknown
+		}
+		replay.Players[playerIdx].Difficulty = val
+		break
+	case AttrPNamedColor:
+		val, exists := colorMap[attr.strValue]
+		if !exists {
+			val = ColorUnknown
+		}
+		replay.Players[playerIdx].NamedColor = val
+		break
+	}
+
+	return
+}
+
+func (replay *Replay) processGlobalAttribute(attr *replayAttribute) (err error) {
+	typeMap := map[string]int{
+		"1v1":  Game1v1,
+		"2v2":  Game2v2,
+		"3v3":  Game3v3,
+		"4v4":  Game4v4,
+		"FFA":  GameFfa,
+		"6v6":  Game6v6,
+		"Cust": GameCustom,
+	}
+	speedMap := map[string]int{
+		"Slor": SpeedSlower,
+		"Slow": SpeedSlow,
+		"Norm": SpeedNormal,
+		"Fast": SpeedFast,
+		"Fasr": SpeedFaster,
+	}
+	categoryMap := map[string]int{
+		"Priv": CategoryPrivate,
+		"Amm":  CategoryLadder,
+		"Pub":  CategoryPublic,
+	}
+
+	switch attr.id {
+	case AttrGGameType:
+		val, exists := typeMap[attr.strValue]
+		if !exists {
+			val = GameUnknown
+		}
+		replay.GameType = val
+		break
+	case AttrGGameSpeed:
+		val, exists := speedMap[attr.strValue]
+		if !exists {
+			val = SpeedUnknown
+		}
+		replay.GameSpeed = val
+		break
+	case AttrGGameCategory:
+		val, exists := categoryMap[attr.strValue]
+		if !exists {
+			val = CategoryUnknown
+		}
+		replay.GameCategory = val
+		break
+	}
+
 	return
 }

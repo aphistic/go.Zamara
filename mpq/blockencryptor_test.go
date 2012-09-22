@@ -29,41 +29,29 @@
 package mpq
 
 import (
-	"testing"
+	. "launchpad.net/gocheck"
 )
 
-func TestBlockEncryptionTable(t *testing.T) {
-	if blockEncryptionTable[0] != 1439053538 {
-		t.Errorf("Entry[0] is incorrect, %v != 1439053538",
-			blockEncryptionTable[0])
-	}
-	if blockEncryptionTable[100] != 2690928833 {
-		t.Errorf("Entry[100] is incorrect, %v != 2690928833",
-			blockEncryptionTable[100])
-	}
-	if blockEncryptionTable[1000] != 2859196621 {
-		t.Errorf("Entry[1000] is incorrect, %v != 2859196621",
-			blockEncryptionTable[1000])
-	}
-	if blockEncryptionTable[1279] != 1929586796 {
-		t.Errorf("Entry[1279] is incorrect, %v != 1929586796",
-			blockEncryptionTable[1279])
-	}
+type BlockEncryptorSuite struct {}
+
+var _ = Suite(&BlockEncryptorSuite{})
+
+func (s *BlockEncryptorSuite) TestBlockEncryptionTable(c *C) {
+	c.Check(blockEncryptionTable[0], Equals, uint32(1439053538))
+	c.Check(blockEncryptionTable[100], Equals, uint32(2690928833))
+	c.Check(blockEncryptionTable[1000], Equals, uint32(2859196621))
+	c.Check(blockEncryptionTable[1279], Equals, uint32(1929586796))
 }
 
-func TestStringHashing(t *testing.T) {
+func (s *BlockEncryptorSuite) TestStringHashing(c *C) {
 	hash := hashString("this is a string", 0x100)
-	if hash != 450484832 {
-		t.Errorf("Hash[0x100]: %v != 450484832", hash)
-	}
+	c.Check(hash, Equals, uint32(450484832))
 
 	hash = hashString("this is a string", 0x200)
-	if hash != 2082422408 {
-		t.Errorf("Hash[0x200]: %v != 2082422408", hash)
-	}
+	c.Check(hash, Equals, uint32(2082422408))
 }
 
-func TestDecryptHashTable(t *testing.T) {
+func (s *BlockEncryptorSuite) TestDecryptHashTable(c *C) {
 	hashTable := []byte{
 		0x07, 0xf8, 0xB8, 0x55, 0x4F, 0xB4, 0x8E, 0x3C, 0x7C, 0xA8, 0x7B, 0xAC, 0xAE, 0x1A, 0x00, 0xE0, // Hash Entry 1
 		0xC7, 0xC9, 0xDC, 0xC5, 0x3E, 0x6C, 0xFE, 0xC3, 0xA2, 0x02, 0x33, 0xA7, 0xB8, 0x1B, 0x6D, 0xB7, // Hash Entry 2
@@ -79,13 +67,13 @@ func TestDecryptHashTable(t *testing.T) {
 
 	for idx, val := range hashTable {
 		if expectedResults[idx] != byte(val) {
-			t.Errorf("hashTable[%v]: Actual: %#v Expected: %#v",
+			c.Errorf("hashTable[%v]: Actual: %#v Expected: %#v",
 				idx, val, expectedResults[idx])
 		}
 	}
 }
 
-func TestDecryptBlockTable(t *testing.T) {
+func (s *BlockEncryptorSuite) TestDecryptBlockTable(c *C) {
 	blockTable := []byte{
 		0xA7, 0x67, 0x48, 0x3D, 0xFC, 0xD1, 0x08, 0xCA, 0xE1, 0xBC, 0x35, 0xF8, 0x97, 0xF1, 0x33, 0xE9, // Block Entry 1
 		0x13, 0x52, 0xB3, 0xB3, 0x07, 0x7F, 0xC0, 0x10, 0x94, 0xF8, 0xD8, 0x0D, 0xD6, 0x1E, 0xA4, 0xD3, // Block Entry 2
@@ -101,7 +89,7 @@ func TestDecryptBlockTable(t *testing.T) {
 
 	for idx, val := range blockTable {
 		if expectedResults[idx] != byte(val) {
-			t.Errorf("blockTable[%v]: Actual: %#v Expected: %#v",
+			c.Errorf("blockTable[%v]: Actual: %#v Expected: %#v",
 				idx, val, expectedResults[idx])
 		}
 	}

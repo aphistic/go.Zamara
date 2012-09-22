@@ -235,12 +235,12 @@ func (value *serializedValue) size() (size int64) {
 	return 0
 }
 
-func (value *serializedValue) i(index int) (item *serializedValue) {
+func (value *serializedValue) i(index int64) (item *serializedValue) {
 	return value.item(index)
 }
 
-func (value *serializedValue) item(index int) (item *serializedValue) {
-	if index < 0 || index >= len(value.members) {
+func (value *serializedValue) item(index int64) (item *serializedValue) {
+	if index < 0 || index >= int64(len(value.members)) {
 		return nil
 	}
 
