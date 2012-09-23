@@ -32,7 +32,7 @@ import (
 	. "launchpad.net/gocheck"
 )
 
-type BlockEncryptorSuite struct {}
+type BlockEncryptorSuite struct{}
 
 var _ = Suite(&BlockEncryptorSuite{})
 

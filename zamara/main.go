@@ -36,10 +36,12 @@ import (
 )
 
 type zamaraFlags struct {
-	input   string // Input file
-	output  string // Output file or directory
-	format  string // Output format for output
-	runType string // Output type
+	input     string // Input file
+	inputAbs  string // Absolute path of the input file
+	output    string // Output file or directory
+	outputAbs string // Absolute path of the output file or directory
+	format    string // Output format for output
+	runType   string // Output type
 
 	verbose bool // Verbose output
 }
@@ -94,9 +96,11 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	validateUsage()
+	fmt.Println(expandPath(flags.output))
+	flags.inputAbs = expandPath(flags.input)
+	flags.outputAbs = expandPath(flags.output)
 
-	//fmt.Printf("\nFlags: %+v\n\n", flags)
+	validateUsage()
 
 	switch flags.format {
 	case "extract":
@@ -104,6 +108,9 @@ func main() {
 		break
 	case "stdout":
 		handleStdout(flags)
+		break
+	case "xml":
+		handleXml(flags)
 		break
 	default:
 		break

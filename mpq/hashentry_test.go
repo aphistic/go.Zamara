@@ -32,7 +32,8 @@ import (
 	. "launchpad.net/gocheck"
 )
 
-type HashEntrySuite struct {}
+type HashEntrySuite struct{}
+
 var _ = Suite(&HashEntrySuite{})
 
 func (s *HashEntrySuite) TestLoadHashEntry(c *C) {

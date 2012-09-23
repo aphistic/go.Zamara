@@ -28,19 +28,25 @@
 
 package mpq
 
+import (
+	"encoding/xml"
+)
+
 type Header struct {
-	HeaderSize    uint32
-	ArchiveSize   uint32
-	FormatVersion uint16
+	XMLName xml.Name `xml:"header"`
 
-	BlockSize uint16
+	HeaderSize    uint32 `xml:"headerSize"`
+	ArchiveSize   uint32 `xml:"archiveSize"`
+	FormatVersion uint16 `xml:"formatVersion"`
 
-	HashTableOffset   uint32
-	BlockTableOffset  uint32
-	HashTableEntries  uint32
-	BlockTableEntries uint32
+	BlockSize uint16 `xml:"blockSize"`
 
-	ExtendedBlockTableOffset uint64
-	HashTableOffsetHigh      uint16
-	BlockTableOffsetHigh     uint16
+	HashTableOffset   uint32 `xml:"hashTableOffset"`
+	BlockTableOffset  uint32 `xml:"blockTableOffset"`
+	HashTableEntries  uint32 `xml:"hashTableEntries"`
+	BlockTableEntries uint32 `xml:"blockTableEntries"`
+
+	ExtendedBlockTableOffset uint64 `xml:"extendedBlockTableOffset"`
+	HashTableOffsetHigh      uint16 `xml:"hashTableOffsetHigh"`
+	BlockTableOffsetHigh     uint16 `xml:"blockTableOffsetHigh"`
 }

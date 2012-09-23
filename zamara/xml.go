@@ -26,29 +26,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package mpq
+package main
 
-import (
-	. "launchpad.net/gocheck"
-)
-
-type BlockEntrySuite struct{}
-
-var _ = Suite(&BlockEntrySuite{})
-
-func (s *BlockEntrySuite) TestLoadBlockEntry(c *C) {
-	// Table after it's been decrypted
-	decryptedTable := []byte{
-		0x2C, 0x00, 0x00, 0x00,
-		0x51, 0x02, 0x00, 0x00,
-		0x51, 0x02, 0x00, 0x00,
-		0x00, 0x02, 0x00, 0x81,
+func handleXml(flags zamaraFlags) {
+	switch flags.runType {
+	case "mpq":
+		mpqXml(flags)
+		break
 	}
-
-	entry := newBlockEntry(decryptedTable)
-
-	c.Check(entry.FilePosition, Equals, uint32(0x2C))
-	c.Check(entry.CompressedSize, Equals, uint32(593))
-	c.Check(entry.FileSize, Equals, uint32(593))
-	c.Check(entry.Flags, Equals, uint32(0x81000200))
 }

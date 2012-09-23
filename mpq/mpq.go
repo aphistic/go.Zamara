@@ -32,6 +32,7 @@ package mpq
 import (
 	"compress/bzip2"
 	"encoding/binary"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -46,17 +47,19 @@ const (
 )
 
 type Mpq struct {
+	XMLName xml.Name `xml:"mpq"`
+
 	reader io.ReadSeeker
 
-	ArchiveOffset uint32
-	Header        Header
+	ArchiveOffset uint32 `xml:"archiveOffset"`
+	Header        Header `xml:"header"`
 
-	HasUserData bool
-	UserData    *UserData
+	HasUserData bool      `xml:"-"`
+	UserData    *UserData `xml:"userData"`
 
 	files        map[string]*File
-	HashEntries  []*HashEntry
-	BlockEntries []*BlockEntry
+	HashEntries  []*HashEntry  `xml:"hashEntries>hashEntry"`
+	BlockEntries []*BlockEntry `xml:"blockEntries>blockEntry"`
 
 	file          *File
 	fileReader    io.Reader

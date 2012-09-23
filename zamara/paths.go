@@ -30,6 +30,7 @@ package main
 
 import (
 	"os"
+	"os/user"
 	"strings"
 )
 
@@ -39,6 +40,19 @@ func cleanDirectory(dir string) (cleanDir string) {
 	}
 
 	return dir
+}
+
+func expandPath(path string) (expanded string) {
+	if strings.Index(path, "~") == 0 {
+		u, err := user.Current()
+		if err != nil {
+			return expanded
+		}
+
+		return strings.Replace(path, "~", u.HomeDir, -1)
+	}
+
+	return path
 }
 
 func cleanFilename(filename string) (cleanFilename string) {

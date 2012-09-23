@@ -35,7 +35,7 @@ import (
 )
 
 func mpqStdout(flags zamaraFlags) {
-	reader, err := os.Open(flags.input)
+	reader, err := os.Open(flags.inputAbs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr,
 			"Unable to open MPQ (%v): %v", flags.input, err.Error())
@@ -51,11 +51,13 @@ func mpqStdout(flags zamaraFlags) {
 
 	fmt.Printf("Reading MPQ: %v\n", flags.input)
 	mpqStdoutHeader(flags, mpq)
+	mpqStdoutUserData(flags, mpq)
+	mpqStdoutHashTable(flags, mpq)
+	mpqStdoutBlockTable(flags, mpq)
 }
 
 func mpqStdoutHeader(flags zamaraFlags, mpq *mpq.Mpq) {
 	fmt.Printf("Archive Offset: %v\n\n", mpq.ArchiveOffset)
-	fmt.Printf("\n")
 
 	fmt.Printf("Header\n")
 	fmt.Printf("======\n")
@@ -66,4 +68,50 @@ func mpqStdoutHeader(flags zamaraFlags, mpq *mpq.Mpq) {
 	fmt.Printf("Hash Table Offset: %v\n", mpq.Header.HashTableOffset)
 	fmt.Printf("Block Table Offset: %v\n", mpq.Header.BlockTableOffset)
 	fmt.Printf("Hash Table Entries: %v\n", mpq.Header.HashTableEntries)
+	fmt.Printf("Block Table Entries: %v\n", mpq.Header.BlockTableEntries)
+	fmt.Printf("Extended Block Table Offset: %v\n", mpq.Header.ExtendedBlockTableOffset)
+	fmt.Printf("Hash Table Offset High: %v\n", mpq.Header.HashTableOffsetHigh)
+	fmt.Printf("Block Table Offset High: %v\n", mpq.Header.BlockTableOffsetHigh)
+	fmt.Printf("\n")
+}
+
+func mpqStdoutUserData(flags zamaraFlags, mpq *mpq.Mpq) {
+	if mpq.HasUserData {
+		fmt.Printf("User Data\n")
+		fmt.Printf("=========\n")
+		fmt.Printf("Max User Data Size: %v\n", mpq.UserData.Header.MaxUserDataSize)
+		fmt.Printf("Archive Offset: %v\n", mpq.UserData.Header.ArchiveOffset)
+		fmt.Printf("User Data Size: %v\n", mpq.UserData.Header.UserDataSize)
+	}
+	fmt.Printf("\n")
+}
+
+func mpqStdoutHashTable(flags zamaraFlags, mpq *mpq.Mpq) {
+	fmt.Printf("Hash Table\n")
+	fmt.Printf("==========\n")
+	fmt.Printf("Index\tFilePathHashA\tFilePathHashB\tLanguage\tPlatform\tBlockIndex\n")
+	fmt.Printf("-----\t-------------\t-------------\t--------\t--------\t----------\n")
+	for idx, val := range mpq.HashEntries {
+		fmt.Printf("%v:\t", idx)
+		fmt.Printf("%#v\t", val.FilePathHashA)
+		fmt.Printf("%#v\t", val.FilePathHashB)
+		fmt.Printf("%#v\t\t", val.Language)
+		fmt.Printf("%#v\t\t", val.Platform)
+		fmt.Printf("%#v\n", val.BlockIndex)
+	}
+	fmt.Printf("\n")
+}
+
+func mpqStdoutBlockTable(flags zamaraFlags, mpq *mpq.Mpq) {
+	fmt.Printf("Block Table\n")
+	fmt.Printf("===========\n")
+	fmt.Printf("FilePosition\tCompressedSize\tFileSize\tFlags\n")
+	fmt.Printf("------------\t--------------\t--------\t-----\n")
+	for _, val := range mpq.BlockEntries {
+		fmt.Printf("%#v\t\t", val.FilePosition)
+		fmt.Printf("%v\t\t", val.CompressedSize)
+		fmt.Printf("%v\t\t", val.FileSize)
+		fmt.Printf("%#v\n", val.Flags)
+	}
+	fmt.Printf("\n")
 }

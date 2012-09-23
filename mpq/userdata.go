@@ -30,16 +30,19 @@ package mpq
 
 import (
 	"encoding/binary"
+	"encoding/xml"
 )
 
 type UserDataHeader struct {
-	MaxUserDataSize uint32
-	ArchiveOffset   uint32
-	UserDataSize    uint32
+	XMLName xml.Name `xml:"userDataHeader"`
+
+	MaxUserDataSize uint32 `xml:"maxUserDataSize"`
+	ArchiveOffset   uint32 `xml:"archiveOffset"`
+	UserDataSize    uint32 `xml:"userDataSize"`
 }
 
 type UserData struct {
-	Header *UserDataHeader
+	Header *UserDataHeader `xml:"userDataHeader"`
 }
 
 func readUserData(data []byte) (readData *UserData) {

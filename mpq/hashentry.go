@@ -30,14 +30,17 @@ package mpq
 
 import (
 	"encoding/binary"
+	"encoding/xml"
 )
 
 type HashEntry struct {
-	FilePathHashA uint32
-	FilePathHashB uint32
-	Language      uint16
-	Platform      uint16
-	BlockIndex    uint32
+	XMLName xml.Name `xml:"hashEntry"`
+
+	FilePathHashA uint32 `xml:"filePathHashA"`
+	FilePathHashB uint32 `xml:"filePathHashB"`
+	Language      uint16 `xml:"language"`
+	Platform      uint16 `xml:"platform"`
+	BlockIndex    uint32 `xml:"blockIndex"`
 }
 
 func newHashEntry(data []byte) (entry *HashEntry) {

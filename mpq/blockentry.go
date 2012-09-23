@@ -30,13 +30,16 @@ package mpq
 
 import (
 	"encoding/binary"
+	"encoding/xml"
 )
 
 type BlockEntry struct {
-	FilePosition   uint32
-	CompressedSize uint32
-	FileSize       uint32
-	Flags          uint32
+	XMLName xml.Name `xml:"blockEntry"`
+
+	FilePosition   uint32 `xml:"filePosition"`
+	CompressedSize uint32 `xml:"compressedSize"`
+	FileSize       uint32 `xml:"fileSize"`
+	Flags          uint32 `xml:"flags"`
 }
 
 func newBlockEntry(data []byte) (entry *BlockEntry) {

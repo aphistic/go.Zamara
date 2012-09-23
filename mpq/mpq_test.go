@@ -92,7 +92,7 @@ func (s *MpqSuite) TestReadMpqHeader(c *C) {
 	c.Check(mpq.Header.BlockTableOffsetHigh, Equals, uint16(0))
 }
 
-var expectedFiles = []string {
+var expectedFiles = []string{
 	"(listfile)",
 	"(attributes)",
 	"replay.attributes.events",
